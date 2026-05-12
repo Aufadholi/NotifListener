@@ -4,6 +4,12 @@ import com.example.wanotification.config.SupportedApps
 
 object NotificationParserFactory {
 
+    private val whatsappParser =
+        WhatsAppParser()
+
+    private val instagramParser =
+        InstagramParser()
+
     fun getParser(
         packageName: String
     ): BaseNotificationParser? {
@@ -11,10 +17,10 @@ object NotificationParserFactory {
         return when (packageName) {
 
             SupportedApps.WHATSAPP ->
-                WhatsAppParser()
+                whatsappParser
 
             SupportedApps.INSTAGRAM ->
-                InstagramParser()
+                instagramParser
 
             else -> null
         }
