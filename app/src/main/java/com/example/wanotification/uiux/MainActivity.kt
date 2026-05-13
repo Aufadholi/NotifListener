@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 
@@ -19,6 +20,7 @@ import androidx.core.content.ContextCompat
 
 import com.example.wanotification.R
 import com.example.wanotification.config.SupportedApps
+import com.example.wanotification.config.TTSSettingsManager
 import com.example.wanotification.filter.ContactStore
 
 class MainActivity :
@@ -40,6 +42,7 @@ class MainActivity :
     private lateinit var listContainer: LinearLayout
     private lateinit var emptyHint: TextView
     private lateinit var countText: TextView
+    private lateinit var ttsToggleSwitch: Switch
 
     private var selectedAppPackage: String =
         SupportedApps.WHATSAPP
@@ -73,6 +76,9 @@ class MainActivity :
         countText =
             findViewById(R.id.text_contact_count)
 
+        ttsToggleSwitch =
+            findViewById(R.id.tts_toggle_switch)
+
         accessButton.setOnClickListener {
 
             startActivity(
@@ -84,6 +90,13 @@ class MainActivity :
         }
 
         setupAppSpinner()
+
+        ttsToggleSwitch.isChecked =
+            TTSSettingsManager.isEnabled(this)
+
+        ttsToggleSwitch.setOnCheckedChangeListener { _, isChecked ->
+            TTSSettingsManager.setEnabled(this, isChecked)
+        }
 
         addButton.setOnClickListener {
             addContact()

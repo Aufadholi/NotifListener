@@ -4,8 +4,10 @@ import android.content.Context
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 
+import com.example.wanotification.config.TTSSettingsManager
+
 class TTSManager(
-    context: Context
+    private val context: Context
 ) : TextToSpeech.OnInitListener {
 
     private var tts: TextToSpeech =
@@ -34,6 +36,10 @@ class TTSManager(
     ) {
 
         if (!isReady) return
+
+//        if (!TTSSettingsManager.isEnabled(context)) {
+//            return
+//        }
 
         tts.speak(
             text,

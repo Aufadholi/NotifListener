@@ -7,6 +7,7 @@ import com.example.wanotification.audio.TTSManager
 import com.example.wanotification.cooldown.CooldownManager
 import com.example.wanotification.filter.AppFilter
 import com.example.wanotification.filter.ContactFilter
+import com.example.wanotification.config.TTSSettingsManager
 import com.example.wanotification.parser.NotificationParserFactory
 import com.example.wanotification.util.NameNormalizer
 
@@ -66,11 +67,38 @@ class NotificationDispatcher(
 
         // SPEECH TEXT
 
-        val speechText =
-            "Pesan masuk dari ${parsed.senderName} di ${parsed.appName}."
+        val includeMessage =
+            TTSSettingsManager.isEnabled(context)
+
+        val speechText = buildSpeechText(
+            parsed.senderName,
+            parsed.appName,
+            parsed.message,
+            includeMessage
+        )
 
         // SPEAK
 
         ttsManager.speak(speechText)
+    }
+
+    private fun buildSpeechText(
+        senderName: String,
+        appName: String,
+        message: String,
+        includeMessage: Boolean
+    ): String {
+
+        val baseText =
+            "Pesan masuk dari $senderName di $appName"
+
+        if (!includeMessage || message.isBlank()) {
+            return "$baseText."
+        }
+
+        val trimmedMessage =
+            message.trim()
+
+        return "$baseText. $trimmedMessage"
     }
 }
