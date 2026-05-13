@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 
 import androidx.activity.ComponentActivity
+import androidx.core.content.ContextCompat
 
 import com.example.wanotification.R
 import com.example.wanotification.config.SupportedApps
@@ -200,18 +201,37 @@ class MainActivity :
         row.orientation =
             LinearLayout.HORIZONTAL
 
-        row.layoutParams =
+        val rowParams =
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
 
-        row.setPadding(0, dpToPx(6), 0, dpToPx(6))
+        rowParams.topMargin =
+            dpToPx(8)
+
+        row.layoutParams = rowParams
+
+        row.setPadding(
+            dpToPx(12),
+            dpToPx(10),
+            dpToPx(12),
+            dpToPx(10)
+        )
+
+        row.setBackgroundResource(R.drawable.bg_card)
 
         val nameView =
             TextView(this)
 
         nameView.text = name
+
+        nameView.setTextColor(
+            ContextCompat.getColor(
+                this,
+                R.color.text_primary
+            )
+        )
 
         nameView.layoutParams =
             LinearLayout.LayoutParams(
@@ -224,6 +244,19 @@ class MainActivity :
             Button(this)
 
         deleteButton.text = "Hapus"
+
+        deleteButton.setBackgroundResource(
+            R.drawable.bg_button_secondary
+        )
+
+        deleteButton.setTextColor(
+            ContextCompat.getColor(
+                this,
+                R.color.text_on_secondary
+            )
+        )
+
+        deleteButton.isAllCaps = false
 
         deleteButton.setOnClickListener {
             ContactStore.removeContact(
