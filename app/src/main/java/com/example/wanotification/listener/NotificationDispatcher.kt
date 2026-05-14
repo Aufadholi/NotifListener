@@ -7,6 +7,7 @@ import com.example.wanotification.audio.TTSManager
 import com.example.wanotification.cooldown.CooldownManager
 import com.example.wanotification.filter.AppFilter
 import com.example.wanotification.filter.ContactFilter
+import com.example.wanotification.filter.KeywordFilter
 import com.example.wanotification.config.TTSSettingsManager
 import com.example.wanotification.parser.NotificationParserFactory
 import com.example.wanotification.util.NameNormalizer
@@ -59,9 +60,18 @@ class NotificationDispatcher(
             return
         }
 
+        // CHECK PRIORITY KEYWORDS (skip cooldown if found)
+
+        val hasPriorityKeyword =
+            KeywordFilter.containsPriorityKeyword(
+                parsed.message
+            )
+
         // COOLDOWN
 
-        if (!CooldownManager.canSpeak(normalizedSender)) {
+        if (!hasPriorityKeyword &&
+            !CooldownManager.canSpeak(normalizedSender)
+        ) {
             return
         }
 

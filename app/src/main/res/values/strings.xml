@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">WaNotification</string>
+
+    <!-- Main Activity UI Strings -->
+    <string name="title_pilih_aplikasi">Pilih Aplikasi</string>
+    <string name="title_filter_kontak">Filter Kontak</string>
+    <string name="title_tts_settings">Pengaturan TTS</string>
+    <string name="label_tts_toggle">Aktifkan TTS Pesan</string>
+    <string name="desc_tts_toggle">Bacakan isi pesan dalam notifikasi</string>
+
+    <!-- Contact Management -->
+    <string name="label_tambah_kontak">Tambah Kontak</string>
+    <string name="label_kontak_diizinkan">Kontak Diizinkan</string>
+    <string name="label_nama_pengirim">Nama Pengirim</string>
+    <string name="desc_nama_pengirim">Nama pengirim sesuai notifikasi</string>
+    <string name="label_hapus">Hapus</string>
+
+    <!-- App Filter -->
+    <string name="label_whatsapp">WhatsApp</string>
+    <string name="label_instagram">Instagram</string>
+    <string name="label_telegram">Telegram</string>
+    <string name="label_sms">SMS</string>
+
+    <!-- General -->
+    <string name="label_simpan">Simpan</string>
+    <string name="label_batal">Batal</string>
+    <string name="label_ok">OK</string>
 </resources>

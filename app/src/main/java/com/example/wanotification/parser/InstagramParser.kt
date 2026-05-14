@@ -21,10 +21,13 @@ class InstagramParser : BaseNotificationParser {
                 ?.toString()
                 ?: ""
 
-        val sender =
+        val sender = if (rawTitle.contains(":")) {
             rawTitle
                 .substringAfter(":")
                 .trim()
+        } else {
+            rawTitle.trim()
+        }
 
         return ParsedNotification(
 

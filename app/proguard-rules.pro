@@ -19,3 +19,25 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# WA Notification Critical Classes
+-keep class com.example.wanotification.listener.** { *; }
+-keep class com.example.wanotification.audio.** { *; }
+-keep class com.example.wanotification.parser.** { *; }
+-keep class com.example.wanotification.filter.** { *; }
+-keep class com.example.wanotification.config.** { *; }
+-keep class com.example.wanotification.service.** { *; }
+-keep class com.example.wanotification.receiver.** { *; }
+-keep class com.example.wanotification.queue.** { *; }
+-keep class com.example.wanotification.cooldown.** { *; }
+-keep class com.example.wanotification.model.** { *; }
+
+# Keep inner classes
+-keepclasseswithmembernames class com.example.wanotification.** {
+    native <methods>;
+}
+
+# Preserve annotation processing
+-keep interface * { *; }
+-keep @interface * { *; }
+

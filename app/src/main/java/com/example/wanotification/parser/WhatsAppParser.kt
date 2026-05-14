@@ -11,7 +11,7 @@ class WhatsAppParser : BaseNotificationParser {
 
         val extras = sbn.notification.extras
 
-        val sender =
+        val groupTitle =
             extras.getString("android.title")
                 ?: return null
 
@@ -25,17 +25,30 @@ class WhatsAppParser : BaseNotificationParser {
 
         val message = bigText ?: text ?: ""
 
+        // Detect group chat: if text contains ":", format is "Nama Pengirim: isi pesan"
+        val isGroupChat = text?.contains(":") ?: false
+
+        val senderName = if (isGroupChat && text != null) {
+            // Extract actual sender name from "Sender: Message" format
+            text.substringBefore(":").trim()
+        } else {
+            // Direct message, sender is the title
+            groupTitle
+        }
+
         return ParsedNotification(
 
             appPackage = sbn.packageName,
 
             appName = "WhatsApp",
 
-            senderName = sender,
+            senderName = senderName,
 
             message = message,
 
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+
+            isGroup = isGroupChat
         )
     }
 }
