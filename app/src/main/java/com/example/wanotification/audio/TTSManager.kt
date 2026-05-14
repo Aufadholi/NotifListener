@@ -112,4 +112,26 @@ class TTSManager(
         }
     }
 
+    /**
+     * Shutdown the TextToSpeech engine and clear any queued speech.
+     * Safe to call multiple times.
+     */
+    fun shutdown() {
+
+        try {
+            // clear pending items first so nothing is left in memory
+            SpeechQueueManager.clear()
+
+            if (isReady) {
+                tts.stop()
+            }
+
+            tts.shutdown()
+        } catch (ex: Exception) {
+            Log.e(TAG, "Error while shutting down TTS", ex)
+        } finally {
+            isReady = false
+        }
+    }
+
 }

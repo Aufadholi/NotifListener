@@ -92,6 +92,17 @@ class NotificationDispatcher(
         ttsManager.speak(speechText)
     }
 
+    /**
+     * Clean up resources used by the dispatcher (notably the TTS engine).
+     */
+    fun shutdown() {
+        try {
+            ttsManager.shutdown()
+        } catch (ex: Exception) {
+            // best-effort cleanup
+        }
+    }
+
     private fun buildSpeechText(
         senderName: String,
         appName: String,

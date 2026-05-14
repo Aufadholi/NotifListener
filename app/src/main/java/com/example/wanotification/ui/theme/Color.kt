@@ -2,10 +2,14 @@ package com.example.wanotification.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val SpaceNavy = Color(0xFF0B1020)
+val SpaceIndigo = Color(0xFF182447)
+val SpacePurple = Color(0xFF6D5EF6)
+val SpaceCyan = Color(0xFF6DE2FF)
+val SpaceRose = Color(0xFFFF7DB8)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val SpaceText = Color(0xFFF4F7FF)
+val SpaceMuted = Color(0xFF9CA8D9)
+
+val SpaceLightBase = Color(0xFFF6F8FF)
+val SpaceLightSurface = Color(0xFFEAF0FF)

@@ -51,6 +51,15 @@ class NotificationListener :
 
         super.onDestroy()
 
+        // Attempt to cleanly shutdown the dispatcher and underlying TTS engine
+        try {
+            if (::dispatcher.isInitialized) {
+                dispatcher.shutdown()
+            }
+        } catch (ex: Exception) {
+            Log.e(TAG, "Error shutting down dispatcher", ex)
+        }
+
         CooldownManager.clear()
 
         Log.d(TAG, "Notification listener destroyed")
