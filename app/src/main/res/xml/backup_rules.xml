@@ -7,7 +7,7 @@
     <!-- Exclude contact filter preferences (sensitive data) -->
     <exclude domain="sharedpref" path="contact_filter_prefs.xml"/>
     <!-- Exclude TTS settings from cloud backup -->
-    <exclude domain="sharedpref" path="tts_prefs.xml"/>
+    <exclude domain="sharedpref" path="tts_settings_prefs.xml"/>
     <!-- Exclude app cache -->
     <exclude domain="cache"/>
 </full-backup-content>

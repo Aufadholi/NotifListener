@@ -8,7 +8,7 @@
         <!-- Exclude contact filter preferences (sensitive data) -->
         <exclude domain="sharedpref" path="contact_filter_prefs.xml"/>
         <!-- Exclude TTS settings -->
-        <exclude domain="sharedpref" path="tts_prefs.xml"/>
+        <exclude domain="sharedpref" path="tts_settings_prefs.xml"/>
         <!-- Exclude database and cache -->
         <exclude domain="database"/>
         <exclude domain="cache"/>

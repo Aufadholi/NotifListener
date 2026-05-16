@@ -6,7 +6,7 @@ object TTSSettingsManager {
 
     private const val PREFS_NAME = "tts_settings_prefs"
     private const val KEY_TTS_ENABLED = "tts_enabled"
-    private const val DEFAULT_ENABLED = false
+    private const val DEFAULT_ENABLED = true
 
     fun isEnabled(
         context: Context

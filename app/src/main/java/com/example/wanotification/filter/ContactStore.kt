@@ -45,8 +45,9 @@ object ContactStore {
             ensureNormalizedSet(context, appPackage)
 
         if (normalizedSet.isEmpty()) {
-            // No contacts configured yet: allow speech so the app still works on first setup.
-            return true
+            // Strict whitelist mode: if the app has no configured contacts yet,
+            // do not allow speech for that app.
+            return false
         }
 
         return normalizedSet.contains(normalizedSender)

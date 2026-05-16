@@ -25,14 +25,11 @@ class WhatsAppParser : BaseNotificationParser {
 
         val message = bigText ?: text ?: ""
 
-        // Detect group chat: if text contains ":", format is "Nama Pengirim: isi pesan"
-        val isGroupChat = text?.contains(":") ?: false
+        val isGroupChat = looksLikeGroupMessage(text)
 
         val senderName = if (isGroupChat && text != null) {
-            // Extract actual sender name from "Sender: Message" format
-            text.substringBefore(":").trim()
+            text.substringBefore(":").trim().ifBlank { groupTitle }
         } else {
-            // Direct message, sender is the title
             groupTitle
         }
 
@@ -50,5 +47,24 @@ class WhatsAppParser : BaseNotificationParser {
 
             isGroup = isGroupChat
         )
+    }
+
+    private fun looksLikeGroupMessage(text: String?): Boolean {
+
+        val raw = text?.trim().orEmpty()
+
+        if (raw.isBlank()) return false
+
+        val colonIdx = raw.indexOf(": ")
+
+        if (colonIdx !in 1..40) return false
+
+        val candidate = raw.substring(0, colonIdx).trim()
+
+        if (candidate.isBlank()) return false
+
+        if (candidate.contains("://") || candidate.contains("http")) return false
+
+        return candidate.count { it == ' ' } <= 2
     }
 }

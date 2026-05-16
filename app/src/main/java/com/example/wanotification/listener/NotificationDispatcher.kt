@@ -84,7 +84,8 @@ class NotificationDispatcher(
             parsed.senderName,
             parsed.appName,
             parsed.message,
-            includeMessage
+            includeMessage,
+            parsed.isGroup
         )
 
         // SPEAK
@@ -107,11 +108,18 @@ class NotificationDispatcher(
         senderName: String,
         appName: String,
         message: String,
-        includeMessage: Boolean
+        includeMessage: Boolean,
+        isGroup: Boolean
     ): String {
 
+        val sourceLabel = if (isGroup) {
+            "grup $appName"
+        } else {
+            appName
+        }
+
         val baseText =
-            "Pesan masuk dari $senderName di $appName"
+            "Pesan masuk dari $senderName di $sourceLabel"
 
         if (!includeMessage || message.isBlank()) {
             return "$baseText."
