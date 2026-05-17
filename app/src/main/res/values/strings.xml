@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WaNotification</string>
+    <string name="app_name">NotificationReader</string>
 
     <!-- Main Activity UI Strings -->
     <string name="title_pilih_aplikasi">Pilih Aplikasi</string>
