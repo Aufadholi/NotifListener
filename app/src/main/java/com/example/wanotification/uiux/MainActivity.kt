@@ -32,23 +32,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.PopupProperties
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.wanotification.listener.NotificationListener
 import com.example.wanotification.config.SupportedApps
 import com.example.wanotification.config.TTSSettingsManager
@@ -61,6 +57,13 @@ import com.example.wanotification.ui.theme.SpacePurple
 import com.example.wanotification.ui.theme.SpaceRose
 import com.example.wanotification.ui.theme.SpaceText
 import com.example.wanotification.ui.theme.WaNotificationTheme
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 data class AppOption(val label: String, val packageName: String)
 
@@ -93,6 +96,7 @@ private fun MainScreen(
     onOpenNotificationSettings: () -> Unit
 ) {
     val ctx = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val selectedIndex = rememberSaveable { mutableStateOf(0) }
     val inputText = rememberSaveable { mutableStateOf("") }
@@ -108,6 +112,16 @@ private fun MainScreen(
         contacts.clear()
         contacts.addAll(ContactStore.getAllowedContacts(ctx, appOptions[selectedIndex.value].packageName))
         notificationAccessGranted.value = isNotificationListenerEnabled(ctx)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notificationAccessGranted.value = isNotificationListenerEnabled(ctx)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val spaceBackground = Brush.verticalGradient(
@@ -336,7 +350,11 @@ private fun MainScreen(
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
                     items(contacts) { name ->
                         Card(
                             colors = CardDefaults.cardColors(containerColor = Color(0xFF182A4A).copy(alpha = 0.96f)),
