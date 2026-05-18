@@ -13,3 +13,13 @@ val SpaceMuted = Color(0xFF9CA8D9)
 
 val SpaceLightBase = Color(0xFFF6F8FF)
 val SpaceLightSurface = Color(0xFFEAF0FF)
+
+val SpaceBackgroundMid = Color(0xFF111831)
+val SpaceBackgroundDeep = Color(0xFF0A0F1C)
+
+val SpaceCardNotification = Color(0xFF121B35)
+val SpaceCardAppSelector = Color(0xFF162242)
+val SpaceCardTts = Color(0xFF1A2443)
+val SpaceCardAddContact = Color(0xFF131C33)
+val SpaceCardEmpty = Color(0xFF182242)
+val SpaceCardContactItem = Color(0xFF182A4A)
