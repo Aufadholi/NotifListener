@@ -107,6 +107,7 @@ class TTSManager(
             flushPendingSpeech()
         } else {
             Log.e(TAG, "TTS initialization failed with status=$status")
+            shutdownInternal()
         }
     }
 
@@ -290,4 +291,3 @@ class TTSManager(
         }
     }
 }
-

@@ -34,13 +34,7 @@ class NotificationListener :
             ContactStore.getAllowedContacts(this, pkg)
         }
 
-        val notification =
-            ForegroundNotificationManager.createNotificationAndChannel(this)
-
-        startForeground(
-            ForegroundNotificationManager.getNotificationId(),
-            notification
-        )
+        startForegroundSafely()
 
         dispatcher =
             NotificationDispatcher(this)
@@ -51,6 +45,8 @@ class NotificationListener :
     override fun onListenerConnected() {
 
         super.onListenerConnected()
+
+        startForegroundSafely()
 
         Log.d(TAG, "Notification listener connected")
     }
@@ -86,5 +82,19 @@ class NotificationListener :
         CooldownManager.clear()
 
         Log.d(TAG, "Notification listener destroyed")
+    }
+
+    private fun startForegroundSafely() {
+        try {
+            val notification =
+                ForegroundNotificationManager.createNotificationAndChannel(this)
+
+            startForeground(
+                ForegroundNotificationManager.getNotificationId(),
+                notification
+            )
+        } catch (ex: Exception) {
+            Log.e(TAG, "Failed to start foreground notification", ex)
+        }
     }
 }
