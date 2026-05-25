@@ -26,6 +26,9 @@ object ForegroundNotificationManager {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
     }
 
@@ -39,7 +42,11 @@ object ForegroundNotificationManager {
                 CHANNEL_ID,
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_MIN
-            )
+            ).apply {
+                setSound(null, null)
+                enableVibration(false)
+                setShowBadge(false)
+            }
 
             val manager = context.getSystemService(
                 NotificationManager::class.java
@@ -51,4 +58,3 @@ object ForegroundNotificationManager {
 
     fun getNotificationId(): Int = NOTIFICATION_ID
 }
-

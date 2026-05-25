@@ -4,7 +4,12 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 
+import com.example.wanotification.config.SupportedApps
+import com.example.wanotification.config.TTSSettingsManager
 import com.example.wanotification.cooldown.CooldownManager
+import com.example.wanotification.filter.AppFilter
+import com.example.wanotification.filter.ContactStore
+import com.example.wanotification.service.ForegroundNotificationManager
 
 class NotificationListener :
     NotificationListenerService() {
@@ -23,6 +28,20 @@ class NotificationListener :
         // Initialize CooldownManager with context
         CooldownManager.init(this)
 
+        TTSSettingsManager.init(this)
+
+        SupportedApps.enabledApps.forEach { pkg ->
+            ContactStore.getAllowedContacts(this, pkg)
+        }
+
+        val notification =
+            ForegroundNotificationManager.createNotificationAndChannel(this)
+
+        startForeground(
+            ForegroundNotificationManager.getNotificationId(),
+            notification
+        )
+
         dispatcher =
             NotificationDispatcher(this)
 
@@ -39,6 +58,10 @@ class NotificationListener :
     override fun onNotificationPosted(
         sbn: StatusBarNotification
     ) {
+
+        if (!AppFilter.isAllowed(sbn.packageName)) {
+            return
+        }
 
         try {
             dispatcher.dispatch(sbn)

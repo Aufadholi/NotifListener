@@ -16,8 +16,7 @@ class NotificationDispatcher(
     private val context: Context
 ) {
 
-    private val ttsManager =
-        TTSManager(context)
+    private var ttsManager: TTSManager? = null
 
     fun dispatch(
         sbn: StatusBarNotification
@@ -90,7 +89,7 @@ class NotificationDispatcher(
 
         // SPEAK
 
-        ttsManager.speak(speechText)
+        getTtsManager().speak(speechText)
     }
 
     /**
@@ -98,10 +97,17 @@ class NotificationDispatcher(
      */
     fun shutdown() {
         try {
-            ttsManager.shutdown()
+            ttsManager?.shutdown()
         } catch (ex: Exception) {
             // best-effort cleanup
         }
+    }
+
+    private fun getTtsManager(): TTSManager {
+        if (ttsManager == null) {
+            ttsManager = TTSManager(context)
+        }
+        return ttsManager!!
     }
 
     private fun buildSpeechText(

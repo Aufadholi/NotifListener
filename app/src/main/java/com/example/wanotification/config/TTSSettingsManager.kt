@@ -1,6 +1,7 @@
 package com.example.wanotification.config
 
 import android.content.Context
+import android.content.SharedPreferences
 
 object TTSSettingsManager {
 
@@ -8,19 +9,22 @@ object TTSSettingsManager {
     private const val KEY_TTS_ENABLED = "tts_enabled"
     private const val DEFAULT_ENABLED = true
 
+    @Volatile
+    private var cachedEnabled: Boolean? = null
+
+    private var prefs: SharedPreferences? = null
+
+    fun init(context: Context) {
+        ensureLoaded(context)
+    }
+
     fun isEnabled(
         context: Context
     ): Boolean {
 
-        val prefs = context.getSharedPreferences(
-            PREFS_NAME,
-            Context.MODE_PRIVATE
-        )
+        ensureLoaded(context)
 
-        return prefs.getBoolean(
-            KEY_TTS_ENABLED,
-            DEFAULT_ENABLED
-        )
+        return cachedEnabled ?: DEFAULT_ENABLED
     }
 
     fun setEnabled(
@@ -28,14 +32,26 @@ object TTSSettingsManager {
         enabled: Boolean
     ) {
 
-        val prefs = context.getSharedPreferences(
-            PREFS_NAME,
-            Context.MODE_PRIVATE
-        )
+        ensureLoaded(context)
 
-        prefs.edit().apply {
-            putBoolean(KEY_TTS_ENABLED, enabled)
-            apply()
+        cachedEnabled = enabled
+
+        prefs?.edit()?.putBoolean(KEY_TTS_ENABLED, enabled)?.apply()
+    }
+
+    private fun ensureLoaded(context: Context) {
+        if (prefs == null) {
+            prefs = context.getSharedPreferences(
+                PREFS_NAME,
+                Context.MODE_PRIVATE
+            )
+        }
+
+        if (cachedEnabled == null) {
+            cachedEnabled = prefs?.getBoolean(
+                KEY_TTS_ENABLED,
+                DEFAULT_ENABLED
+            ) ?: DEFAULT_ENABLED
         }
     }
 }
