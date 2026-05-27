@@ -217,8 +217,11 @@ object ContactStore {
         appPackage: String
     ): MutableList<String> {
 
+        val appContext =
+            context.applicationContext
+
         val prefs =
-            context.getSharedPreferences(
+            appContext.getSharedPreferences(
                 PREFS_NAME,
                 Context.MODE_PRIVATE
             )
@@ -282,8 +285,11 @@ object ContactStore {
         rawList: List<String>
     ) {
 
+        val appContext =
+            context.applicationContext
+
         val prefs =
-            context.getSharedPreferences(
+            appContext.getSharedPreferences(
                 PREFS_NAME,
                 Context.MODE_PRIVATE
             )

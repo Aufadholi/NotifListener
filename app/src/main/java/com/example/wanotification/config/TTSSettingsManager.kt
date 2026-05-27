@@ -40,8 +40,9 @@ object TTSSettingsManager {
     }
 
     private fun ensureLoaded(context: Context) {
+        val appContext = context.applicationContext
         if (prefs == null) {
-            prefs = context.getSharedPreferences(
+            prefs = appContext.getSharedPreferences(
                 PREFS_NAME,
                 Context.MODE_PRIVATE
             )

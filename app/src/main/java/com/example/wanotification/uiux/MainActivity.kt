@@ -105,12 +105,13 @@ private fun MainScreen(
     onOpenNotificationSettings: () -> Unit
 ) {
     val ctx = LocalContext.current
+    val appCtx = ctx.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val selectedIndex = rememberSaveable { mutableStateOf(0) }
     val inputText = rememberSaveable { mutableStateOf("") }
     val contacts = remember { mutableStateListOf<String>() }
-    val ttsEnabled = rememberSaveable { mutableStateOf(TTSSettingsManager.isEnabled(ctx)) }
+    val ttsEnabled = rememberSaveable { mutableStateOf(TTSSettingsManager.isEnabled(appCtx)) }
     val dropdownExpanded = rememberSaveable { mutableStateOf(false) }
     val notificationAccessGranted = rememberSaveable {
         mutableStateOf(isNotificationListenerEnabled(ctx))
@@ -119,7 +120,7 @@ private fun MainScreen(
 
     fun refreshContacts() {
         contacts.clear()
-        contacts.addAll(ContactStore.getAllowedContacts(ctx, appOptions[selectedIndex.value].packageName))
+        contacts.addAll(ContactStore.getAllowedContacts(appCtx, appOptions[selectedIndex.value].packageName))
     }
 
     // load initial list when selected app changes
@@ -204,7 +205,7 @@ private fun MainScreen(
                 ttsEnabled = ttsEnabled.value,
                 onToggle = {
                     ttsEnabled.value = it
-                    TTSSettingsManager.setEnabled(ctx, it)
+                    TTSSettingsManager.setEnabled(appCtx, it)
                 }
             )
 
@@ -214,7 +215,7 @@ private fun MainScreen(
                 inputText = inputText.value,
                 onInputChange = { inputText.value = it },
                 onAdd = {
-                    val result = ContactStore.addContact(ctx, appOptions[selectedIndex.value].packageName, inputText.value)
+                    val result = ContactStore.addContact(appCtx, appOptions[selectedIndex.value].packageName, inputText.value)
                     when (result) {
                         ContactStore.AddResult.ADDED -> {
                             inputText.value = ""
@@ -234,7 +235,7 @@ private fun MainScreen(
             ContactListSection(
                 contacts = contacts,
                 onRemove = { name ->
-                    ContactStore.removeContact(ctx, appOptions[selectedIndex.value].packageName, name)
+                    ContactStore.removeContact(appCtx, appOptions[selectedIndex.value].packageName, name)
                     refreshContacts()
                 },
                 listModifier = Modifier.weight(1f)

@@ -15,7 +15,10 @@ object CooldownManager {
     private var prefs: SharedPreferences? = null
 
     fun init(context: Context) {
-        prefs = context.getSharedPreferences(
+        val appContext =
+            context.applicationContext
+
+        prefs = appContext.getSharedPreferences(
             PREFS_NAME,
             Context.MODE_PRIVATE
         )

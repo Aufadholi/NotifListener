@@ -16,6 +16,9 @@ class NotificationDispatcher(
     private val context: Context
 ) {
 
+    private val appContext =
+        context.applicationContext
+
     private var ttsManager: TTSManager? = null
 
     fun dispatch(
@@ -51,7 +54,7 @@ class NotificationDispatcher(
         // FILTER CONTACT
 
         if (!ContactFilter.isAllowedNormalized(
-                context,
+                appContext,
                 parsed.appPackage,
                 normalizedSender
             )
@@ -77,7 +80,7 @@ class NotificationDispatcher(
         // SPEECH TEXT
 
         val includeMessage =
-            TTSSettingsManager.isEnabled(context)
+            TTSSettingsManager.isEnabled(appContext)
 
         val speechText = buildSpeechText(
             parsed.senderName,
@@ -105,7 +108,7 @@ class NotificationDispatcher(
 
     private fun getTtsManager(): TTSManager {
         if (ttsManager == null) {
-            ttsManager = TTSManager(context)
+            ttsManager = TTSManager(appContext)
         }
         return ttsManager!!
     }

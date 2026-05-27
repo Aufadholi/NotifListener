@@ -25,13 +25,15 @@ class NotificationListener :
 
         super.onCreate()
 
-        // Initialize CooldownManager with context
-        CooldownManager.init(this)
+        val appContext = applicationContext
 
-        TTSSettingsManager.init(this)
+        // Initialize CooldownManager with context
+        CooldownManager.init(appContext)
+
+        TTSSettingsManager.init(appContext)
 
         SupportedApps.enabledApps.forEach { pkg ->
-            ContactStore.getAllowedContacts(this, pkg)
+            ContactStore.getAllowedContacts(appContext, pkg)
         }
 
         startForegroundSafely()
