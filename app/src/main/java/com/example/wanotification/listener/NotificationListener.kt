@@ -53,6 +53,21 @@ class NotificationListener :
         Log.d(TAG, "Notification listener connected")
     }
 
+    override fun onListenerDisconnected() {
+
+        super.onListenerDisconnected()
+
+        try {
+            if (::dispatcher.isInitialized) {
+                dispatcher.shutdown()
+            }
+        } catch (ex: Exception) {
+            Log.e(TAG, "Error shutting down dispatcher on disconnect", ex)
+        }
+
+        Log.d(TAG, "Notification listener disconnected")
+    }
+
     override fun onNotificationPosted(
         sbn: StatusBarNotification
     ) {
