@@ -17,6 +17,9 @@ class NotificationListener :
     private lateinit var dispatcher:
             NotificationDispatcher
 
+    @Volatile
+    private var isActive = false
+
     companion object {
         private const val TAG = "NotificationListener"
     }
@@ -24,6 +27,8 @@ class NotificationListener :
     override fun onCreate() {
 
         super.onCreate()
+
+        isActive = true
 
         val appContext = applicationContext
 
@@ -48,6 +53,8 @@ class NotificationListener :
 
         super.onListenerConnected()
 
+        isActive = true
+
         startForegroundSafely()
 
         Log.d(TAG, "Notification listener connected")
@@ -56,6 +63,8 @@ class NotificationListener :
     override fun onListenerDisconnected() {
 
         super.onListenerDisconnected()
+
+        isActive = false
 
         try {
             if (::dispatcher.isInitialized) {
@@ -72,6 +81,10 @@ class NotificationListener :
         sbn: StatusBarNotification
     ) {
 
+        if (!isActive) {
+            return
+        }
+
         if (!AppFilter.isAllowed(sbn.packageName)) {
             return
         }
@@ -84,6 +97,8 @@ class NotificationListener :
     }
 
     override fun onDestroy() {
+
+        isActive = false
 
         super.onDestroy()
 
