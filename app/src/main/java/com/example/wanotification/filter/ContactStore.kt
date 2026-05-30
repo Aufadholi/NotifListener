@@ -15,6 +15,13 @@ object ContactStore {
         INVALID
     }
 
+    enum class UpdateResult {
+        UPDATED,
+        DUPLICATE,
+        INVALID,
+        NOT_FOUND
+    }
+
     private const val PREFS_NAME =
         "contact_filter_prefs"
 
@@ -103,6 +110,69 @@ object ContactStore {
             save(context, appPackage, rawList)
 
             return AddResult.ADDED
+        }
+    }
+
+    fun updateContact(
+        context: Context,
+        appPackage: String,
+        originalName: String,
+        newName: String
+    ): UpdateResult {
+
+        val trimmed =
+            newName.trim()
+
+        val normalized =
+            NameNormalizer.normalize(trimmed)
+
+        if (normalized.isEmpty()) {
+            return UpdateResult.INVALID
+        }
+
+        synchronized(lock) {
+
+            val rawList =
+                ensureRawList(context, appPackage)
+
+            val normalizedSet =
+                ensureNormalizedSet(context, appPackage)
+
+            val originalNormalized =
+                NameNormalizer.normalize(originalName)
+
+            val index =
+                rawList.indexOfFirst {
+                    NameNormalizer.normalize(it) == originalNormalized
+                }
+
+            if (index < 0) {
+                return UpdateResult.NOT_FOUND
+            }
+
+            val currentName =
+                rawList[index]
+
+            val currentNormalized =
+                NameNormalizer.normalize(currentName)
+
+            val isSameNormalized =
+                currentNormalized == normalized
+
+            if (!isSameNormalized && normalizedSet.contains(normalized)) {
+                return UpdateResult.DUPLICATE
+            }
+
+            rawList[index] = trimmed
+
+            if (!isSameNormalized) {
+                normalizedSet.remove(currentNormalized)
+                normalizedSet.add(normalized)
+            }
+
+            save(context, appPackage, rawList)
+
+            return UpdateResult.UPDATED
         }
     }
 

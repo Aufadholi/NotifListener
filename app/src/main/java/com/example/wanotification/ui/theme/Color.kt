@@ -11,6 +11,9 @@ val SpaceRose = Color(0xFFFF7DB8)
 val SpaceText = Color(0xFFF4F7FF)
 val SpaceMuted = Color(0xFF9CA8D9)
 
+val SpaceGreen = Color(0xFF2ECC71)
+val SpaceRed = Color(0xFFE0575B)
+
 val SpaceLightBase = Color(0xFFF6F8FF)
 val SpaceLightSurface = Color(0xFFEAF0FF)
 

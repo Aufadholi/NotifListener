@@ -10,6 +10,8 @@ import com.example.wanotification.cooldown.CooldownManager
 import com.example.wanotification.filter.AppFilter
 import com.example.wanotification.filter.ContactStore
 import com.example.wanotification.service.ForegroundNotificationManager
+import android.content.pm.ServiceInfo
+import android.os.Build
 
 class NotificationListener :
     NotificationListenerService() {
@@ -121,10 +123,18 @@ class NotificationListener :
             val notification =
                 ForegroundNotificationManager.createNotificationAndChannel(this)
 
-            startForeground(
-                ForegroundNotificationManager.getNotificationId(),
-                notification
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    ForegroundNotificationManager.getNotificationId(),
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                )
+            } else {
+                startForeground(
+                    ForegroundNotificationManager.getNotificationId(),
+                    notification
+                )
+            }
         } catch (ex: Exception) {
             Log.e(TAG, "Failed to start foreground notification", ex)
         }
