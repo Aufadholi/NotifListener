@@ -335,65 +335,72 @@ private fun HomeScreen(
     Spacer(modifier = Modifier.height(18.dp))
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Box(
+        Text(
+            text = "WaNotification",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+            color = SpaceText
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = onOpenNotificationSettings,
             modifier = Modifier
                 .size(190.dp)
                 .clip(CircleShape)
                 .background(statusColor)
-                .clickable { onOpenNotificationSettings() },
-            contentAlignment = Alignment.Center
+                .clickable { onOpenNotificationSettings() }
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = statusLabel,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = SpaceText
-                )
-                Text(
-                    text = "Notifikasi",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SpaceText.copy(alpha = 0.9f)
-                )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = statusLabel,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = SpaceText
+                    )
+                    Text(
+                        text = "Notifikasi",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SpaceText.copy(alpha = 0.9f)
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = SpaceCardTts.copy(alpha = 0.95f)),
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-                    .alpha(if (notificationAccessGranted) 1f else 0.5f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.fillMaxWidth(0.72f)) {
-                    Text(
-                        text = "Aktifkan TTS",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = SpaceText,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "TTS hanya bisa diubah saat notifikasi aktif.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SpaceMuted
-                    )
-                }
-                Switch(
-                    checked = ttsEnabled,
-                    onCheckedChange = onToggleTts,
-                    enabled = notificationAccessGranted
+            Column(modifier = Modifier.fillMaxWidth(0.72f)) {
+                Text(
+                    text = "Aktifkan TTS",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SpaceText,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "TTS hanya bisa diubah saat notifikasi aktif.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SpaceMuted
                 )
             }
+            Switch(
+                checked = ttsEnabled,
+                onCheckedChange = onToggleTts,
+                enabled = notificationAccessGranted
+            )
         }
     }
 }
