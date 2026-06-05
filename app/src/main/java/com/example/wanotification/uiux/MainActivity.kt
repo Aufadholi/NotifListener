@@ -342,7 +342,7 @@ private fun HomeScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "WaNotification",
+            text = "NotificationListener",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
             color = SpaceText
         )
