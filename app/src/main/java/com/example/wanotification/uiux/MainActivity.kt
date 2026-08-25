@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
 import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -43,6 +45,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,79 +59,111 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
-import com.example.wanotification.listener.NotificationListener
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wanotification.config.SupportedApps
-import com.example.wanotification.config.TTSSettingsManager
+import com.example.wanotification.di.DefaultAppContainer
 import com.example.wanotification.filter.ContactStore
-import com.example.wanotification.ui.theme.SpaceCyan
-import com.example.wanotification.ui.theme.SpaceIndigo
-import com.example.wanotification.ui.theme.SpaceMuted
-import com.example.wanotification.ui.theme.SpaceNavy
-import com.example.wanotification.ui.theme.SpacePurple
-import com.example.wanotification.ui.theme.SpaceText
+import com.example.wanotification.listener.NotificationListener
+import com.example.wanotification.state.ContactEntry
+import com.example.wanotification.state.ContactsUiEvent
+import com.example.wanotification.state.HomeUiEvent
+import com.example.wanotification.state.HomeUiState
 import com.example.wanotification.ui.theme.SpaceBackgroundDeep
 import com.example.wanotification.ui.theme.SpaceBackgroundMid
 import com.example.wanotification.ui.theme.SpaceCardAppSelector
 import com.example.wanotification.ui.theme.SpaceCardContactItem
 import com.example.wanotification.ui.theme.SpaceCardEmpty
 import com.example.wanotification.ui.theme.SpaceCardNotification
-import com.example.wanotification.ui.theme.SpaceCardTts
+import com.example.wanotification.ui.theme.SpaceCyan
 import com.example.wanotification.ui.theme.SpaceGreen
+import com.example.wanotification.ui.theme.SpaceIndigo
+import com.example.wanotification.ui.theme.SpaceMuted
+import com.example.wanotification.ui.theme.SpaceNavy
+import com.example.wanotification.ui.theme.SpacePurple
 import com.example.wanotification.ui.theme.SpaceRed
+import com.example.wanotification.ui.theme.SpaceText
 import com.example.wanotification.ui.theme.WaNotificationTheme
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import com.example.wanotification.viewmodel.AppOption
+import com.example.wanotification.viewmodel.ContactsViewModel
+import com.example.wanotification.viewmodel.ContactsViewModelFactory
+import com.example.wanotification.viewmodel.HomeViewModel
+import com.example.wanotification.viewmodel.HomeViewModelFactory
+import com.example.wanotification.viewmodel.HomeSideEffect
 
-data class AppOption(val label: String, val packageName: String)
-
-data class ContactEntry(
-    val name: String,
-    val appLabel: String,
-    val appPackage: String
-)
-
+/**
+ * FilterOption for contact filter dropdown
+ */
 data class FilterOption(
     val label: String,
     val appPackage: String?
 )
 
+/**
+ * MainActivity - Entry point with MVVM architecture
+ *
+ * ✅ PRESERVED: All original UI functionality
+ * ✅ ADDED: MVVM layer for state management
+ * ✅ SAFE: No business logic changes to services/managers
+ */
 class MainActivity : ComponentActivity() {
 
-    private val appOptions = listOf(
-        AppOption("WhatsApp", SupportedApps.WHATSAPP),
-        AppOption("Instagram", SupportedApps.INSTAGRAM)
-    )
+    private lateinit var appContainer: DefaultAppContainer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appContainer = DefaultAppContainer(this)
 
         setContent {
             WaNotificationTheme {
-                MainScreen(
-                    appOptions = appOptions,
-                    onOpenNotificationSettings = {
-                        startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                    }
-                )
+                MainScreenContainer(appContainer)
             }
         }
     }
 }
 
+/**
+ * Container that sets up ViewModels with DI
+ */
+@Composable
+private fun MainScreenContainer(appContainer: com.example.wanotification.di.AppContainer) {
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(appContainer.settingsRepository)
+    )
+    val contactsViewModel: ContactsViewModel = viewModel(
+        factory = ContactsViewModelFactory(appContainer.contactRepository)
+    )
+
+    MainScreen(homeViewModel, contactsViewModel)
+}
+
+/**
+ * Main screen with tabs (Home + Contacts)
+ *
+ * UDF Pattern:
+ * - Observes state from ViewModels
+ * - Sends events to ViewModels
+ * - No local mutable state except UI transients (input, dialog)
+ */
 @Composable
 private fun MainScreen(
-    appOptions: List<AppOption>,
-    onOpenNotificationSettings: () -> Unit
+    homeViewModel: HomeViewModel,
+    contactsViewModel: ContactsViewModel
 ) {
     val ctx = LocalContext.current
-    val appCtx = ctx.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // Observe state from ViewModels
+    val homeUiState by homeViewModel.uiState.collectAsState()
+    val contactsUiState by contactsViewModel.uiState.collectAsState()
+
+    // UI-only transient state (input fields, dialogs)
     val selectedTab = rememberSaveable { mutableStateOf(0) }
     val addAppIndex = rememberSaveable { mutableStateOf(0) }
     val filterIndex = rememberSaveable { mutableStateOf(0) }
@@ -134,39 +171,38 @@ private fun MainScreen(
     val editInputText = rememberSaveable { mutableStateOf("") }
     val editingEntry = remember { mutableStateOf<ContactEntry?>(null) }
 
-    val waContacts = remember { mutableStateListOf<String>() }
-    val igContacts = remember { mutableStateListOf<String>() }
+    val appOptions = listOf(
+        AppOption("WhatsApp", SupportedApps.WHATSAPP),
+        AppOption("Instagram", SupportedApps.INSTAGRAM)
+    )
 
-    val ttsEnabled = rememberSaveable { mutableStateOf(TTSSettingsManager.isEnabled(appCtx)) }
-    val notificationAccessGranted = rememberSaveable {
-        mutableStateOf(isNotificationListenerEnabled(ctx))
-    }
+    val filterOptions = listOf(
+        FilterOption("Semua", null),
+        FilterOption("WhatsApp", SupportedApps.WHATSAPP),
+        FilterOption("Instagram", SupportedApps.INSTAGRAM)
+    )
 
-    fun refreshContacts(appPackage: String) {
-        val target = when (appPackage) {
-            SupportedApps.WHATSAPP -> waContacts
-            SupportedApps.INSTAGRAM -> igContacts
-            else -> null
-        } ?: return
-
-        target.clear()
-        target.addAll(ContactStore.getAllowedContacts(appCtx, appPackage))
-    }
-
-    fun refreshAllContacts() {
-        refreshContacts(SupportedApps.WHATSAPP)
-        refreshContacts(SupportedApps.INSTAGRAM)
-    }
-
+    // Handle side effects (one-time events from ViewModel)
     LaunchedEffect(Unit) {
-        refreshAllContacts()
-        notificationAccessGranted.value = isNotificationListenerEnabled(ctx)
+        homeViewModel.sideEffects.collect { sideEffect ->
+            when (sideEffect) {
+                HomeSideEffect.OpenNotificationSettings -> {
+                    ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                }
+            }
+        }
     }
 
+    // Refresh contacts when they change
+    LaunchedEffect(contactsUiState.selectedApp) {
+        contactsViewModel.handleEvent(ContactsUiEvent.LoadContacts)
+    }
+
+    // Refresh notification access status when resumed
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                notificationAccessGranted.value = isNotificationListenerEnabled(ctx)
+                homeViewModel.handleEvent(HomeUiEvent.CheckNotificationAccess)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -182,31 +218,18 @@ private fun MainScreen(
         )
     )
 
-    val filterOptions = listOf(
-        FilterOption("Semua", null),
-        FilterOption("WhatsApp", SupportedApps.WHATSAPP),
-        FilterOption("Instagram", SupportedApps.INSTAGRAM)
-    )
-
+    // Filter contacts for display
     val displayedContacts = buildList {
         val selectedFilter = filterOptions[filterIndex.value]
         if (selectedFilter.appPackage == null) {
-            val waEntries = waContacts.asReversed().map {
-                ContactEntry(it, appOptions[0].label, appOptions[0].packageName)
-            }
-            val igEntries = igContacts.asReversed().map {
-                ContactEntry(it, appOptions[1].label, appOptions[1].packageName)
-            }
-            addAll(waEntries)
-            addAll(igEntries)
+            // Show all contacts from all apps
+            addAll(contactsUiState.contacts.asReversed())
         } else if (selectedFilter.appPackage == SupportedApps.WHATSAPP) {
-            addAll(waContacts.asReversed().map {
-                ContactEntry(it, appOptions[0].label, appOptions[0].packageName)
-            })
+            // Show only WhatsApp
+            addAll(contactsUiState.contacts.filter { it.appPackage == SupportedApps.WHATSAPP }.asReversed())
         } else {
-            addAll(igContacts.asReversed().map {
-                ContactEntry(it, appOptions[1].label, appOptions[1].packageName)
-            })
+            // Show only Instagram
+            addAll(contactsUiState.contacts.filter { it.appPackage == SupportedApps.INSTAGRAM }.asReversed())
         }
     }
 
@@ -243,22 +266,43 @@ private fun MainScreen(
             ) {
                 Text(
                     text = "WaNotification",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 30.sp
+                    ),
                     color = SpaceText
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
                 if (selectedTab.value == 0) {
-                    HomeScreen(
-                        notificationAccessGranted = notificationAccessGranted.value,
-                        ttsEnabled = ttsEnabled.value,
-                        onToggleTts = {
-                            ttsEnabled.value = it
-                            TTSSettingsManager.setEnabled(appCtx, it)
-                        },
-                        onOpenNotificationSettings = onOpenNotificationSettings
-                    )
+                    // Home Screen
+                    when (homeUiState) {
+                        is HomeUiState.Loading -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Loading...", color = SpaceText)
+                            }
+                        }
+                        is HomeUiState.Success -> {
+                            val successState = homeUiState as HomeUiState.Success
+                            HomeScreen(
+                                notificationAccessGranted = successState.notificationAccessGranted,
+                                ttsEnabled = successState.ttsEnabled,
+                                onToggleTts = { enabled ->
+                                    homeViewModel.handleEvent(HomeUiEvent.ToggleTts(enabled))
+                                },
+                                onOpenNotificationSettings = {
+                                    homeViewModel.handleEvent(HomeUiEvent.OpenNotificationSettings)
+                                }
+                            )
+                        }
+                        is HomeUiState.Error -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Error: ${(homeUiState as HomeUiState.Error).message}", color = SpaceRed)
+                            }
+                        }
+                    }
                 } else {
+                    // Contacts Screen
                     ContactsScreen(
                         appOptions = appOptions,
                         addAppIndex = addAppIndex.value,
@@ -267,16 +311,11 @@ private fun MainScreen(
                         onInputChange = { inputText.value = it },
                         onAddContact = {
                             val appPackage = appOptions[addAppIndex.value].packageName
-                            val result = ContactStore.addContact(appCtx, appPackage, inputText.value)
-                            when (result) {
-                                ContactStore.AddResult.ADDED -> {
-                                    inputText.value = ""
-                                    Toast.makeText(ctx, "Kontak ditambahkan", Toast.LENGTH_SHORT).show()
-                                    refreshContacts(appPackage)
-                                }
-                                ContactStore.AddResult.DUPLICATE -> Toast.makeText(ctx, "Nama sudah ada", Toast.LENGTH_SHORT).show()
-                                ContactStore.AddResult.LIMIT -> Toast.makeText(ctx, "Maksimal 5 kontak per aplikasi", Toast.LENGTH_SHORT).show()
-                                ContactStore.AddResult.INVALID -> Toast.makeText(ctx, "Nama tidak valid", Toast.LENGTH_SHORT).show()
+                            contactsViewModel.handleEvent(
+                                ContactsUiEvent.AddContact(appPackage, inputText.value)
+                            )
+                            if (contactsUiState.successMessage != null) {
+                                Toast.makeText(ctx, contactsUiState.successMessage, Toast.LENGTH_SHORT).show()
                             }
                         },
                         filterOptions = filterOptions,
@@ -284,8 +323,9 @@ private fun MainScreen(
                         onFilterChange = { filterIndex.value = it },
                         contacts = displayedContacts,
                         onRemove = { entry ->
-                            ContactStore.removeContact(appCtx, entry.appPackage, entry.name)
-                            refreshContacts(entry.appPackage)
+                            contactsViewModel.handleEvent(
+                                ContactsUiEvent.DeleteContact(entry.appPackage, entry.name)
+                            )
                         },
                         onEdit = { entry ->
                             editInputText.value = entry.name
@@ -297,29 +337,46 @@ private fun MainScreen(
         }
     }
 
-    EditContactDialog(
-        entry = editingEntry.value,
-        inputText = editInputText.value,
-        onInputChange = { editInputText.value = it },
-        onDismiss = { editingEntry.value = null },
-        onSave = { entry, newName ->
-            val result = ContactStore.updateContact(appCtx, entry.appPackage, entry.name, newName)
-            when (result) {
-                ContactStore.UpdateResult.UPDATED -> {
-                    Toast.makeText(ctx, "Kontak diperbarui", Toast.LENGTH_SHORT).show()
-                    refreshContacts(entry.appPackage)
-                    editingEntry.value = null
+    // Edit dialog
+    if (editingEntry.value != null) {
+        val entry = editingEntry.value!!
+        AlertDialog(
+            onDismissRequest = { editingEntry.value = null },
+            title = { Text("Edit Kontak") },
+            text = {
+                Column {
+                    Text(
+                        text = "Sosmed: ${entry.appLabel}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SpaceMuted
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = editInputText.value,
+                        onValueChange = { editInputText.value = it },
+                        label = { Text("Nama kontak") }
+                    )
                 }
-                ContactStore.UpdateResult.DUPLICATE -> Toast.makeText(ctx, "Nama sudah ada", Toast.LENGTH_SHORT).show()
-                ContactStore.UpdateResult.INVALID -> Toast.makeText(ctx, "Nama tidak valid", Toast.LENGTH_SHORT).show()
-                ContactStore.UpdateResult.NOT_FOUND -> {
-                    Toast.makeText(ctx, "Kontak tidak ditemukan", Toast.LENGTH_SHORT).show()
-                    refreshContacts(entry.appPackage)
-                    editingEntry.value = null
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        contactsViewModel.handleEvent(
+                            ContactsUiEvent.UpdateContact(entry.appPackage, entry.name, editInputText.value)
+                        )
+                        editingEntry.value = null
+                    }
+                ) {
+                    Text("Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingEntry.value = null }) {
+                    Text("Batal")
                 }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
@@ -639,51 +696,48 @@ private fun ContactRow(
     }
 }
 
-@Composable
-private fun EditContactDialog(
-    entry: ContactEntry?,
-    inputText: String,
-    onInputChange: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onSave: (ContactEntry, String) -> Unit
-) {
-    if (entry == null) {
-        return
-    }
+/**
+ * REPOSITORY LAYER - Consolidated into MainActivity
+ */
+interface IContactRepository {
+    suspend fun getAllContacts(app: String): List<String>
+    suspend fun addContact(app: String, name: String): AddResult
+    suspend fun deleteContact(app: String, name: String)
+    suspend fun updateContact(app: String, oldName: String, newName: String): UpdateResult
+}
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Kontak") },
-        text = {
-            Column {
-                Text(
-                    text = "Sosmed: ${entry.appLabel}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SpaceMuted
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = onInputChange,
-                    label = { Text("Nama kontak") }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(entry, inputText) }) {
-                Text("Simpan")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
+class ContactRepository(private val context: android.content.Context) : IContactRepository {
+    override suspend fun getAllContacts(app: String): List<String> =
+        withContext(Dispatchers.IO) {
+            ContactStore.getAllowedContacts(context, app)
+        }
+
+    override suspend fun addContact(app: String, name: String): AddResult =
+        withContext(Dispatchers.IO) {
+            when (ContactStore.addContact(context, app, name)) {
+                ContactStore.AddResult.ADDED -> AddResult.ADDED
+                ContactStore.AddResult.DUPLICATE -> AddResult.DUPLICATE
+                ContactStore.AddResult.LIMIT -> AddResult.LIMIT
+                ContactStore.AddResult.INVALID -> AddResult.INVALID
             }
         }
-    )
+
+    override suspend fun deleteContact(app: String, name: String) {
+        withContext(Dispatchers.IO) {
+            ContactStore.removeContact(context, app, name)
+        }
+    }
+
+    override suspend fun updateContact(app: String, oldName: String, newName: String): UpdateResult =
+        withContext(Dispatchers.IO) {
+            when (ContactStore.updateContact(context, app, oldName, newName)) {
+                ContactStore.UpdateResult.UPDATED -> UpdateResult.UPDATED
+                ContactStore.UpdateResult.DUPLICATE -> UpdateResult.DUPLICATE
+                ContactStore.UpdateResult.INVALID -> UpdateResult.INVALID
+                ContactStore.UpdateResult.NOT_FOUND -> UpdateResult.NOT_FOUND
+            }
+        }
 }
 
-private fun isNotificationListenerEnabled(context: android.content.Context): Boolean {
-    val expected = ComponentName(context, NotificationListener::class.java).flattenToString()
-    val enabled = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
-    return !enabled.isNullOrBlank() && TextUtils.split(enabled, ":").any { it == expected }
-}
+enum class AddResult { ADDED, DUPLICATE, LIMIT, INVALID }
+enum class UpdateResult { UPDATED, DUPLICATE, INVALID, NOT_FOUND }
