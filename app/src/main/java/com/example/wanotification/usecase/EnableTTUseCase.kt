@@ -1,4 +1,9 @@
 package com.example.wanotification.usecase
 
-class EnableTTUseCase {
+import com.example.wanotification.repository.ISettingsRepository
+
+class EnableTTUseCase(private val settingsRepository: ISettingsRepository) {
+    suspend operator fun invoke(enabled: Boolean) {
+        settingsRepository.setTtsEnabled(enabled)
+    }
 }

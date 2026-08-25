@@ -4,29 +4,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.wanotification.config.SupportedApps
-import com.example.wanotification.uiux.AddResult
-import com.example.wanotification.uiux.IContactRepository
-import com.example.wanotification.uiux.UpdateResult
+import com.example.wanotification.repository.AddResult
+import com.example.wanotification.repository.UpdateResult
 import com.example.wanotification.state.ContactEntry
 import com.example.wanotification.state.ContactsUiEvent
 import com.example.wanotification.state.ContactsUiState
+import com.example.wanotification.usecase.AddContactUseCase
+import com.example.wanotification.usecase.DeleteContactUseCase
+import com.example.wanotification.usecase.GetContactUseCase
+import com.example.wanotification.usecase.UpdateContactUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * ContactsViewModel - Manages UI state for Contacts screen
- *
- * MVVM Architecture:
- * - Repository handles data access (ContactStore, persistence)
- * - ViewModel manages UI state and business logic
- * - UI observes StateFlow and sends events
- *
- * ⚠️ No business logic changes - just proper state management
- */
 class ContactsViewModel(
-    private val contactRepository: IContactRepository,
+    private val addContactUseCase: AddContactUseCase,
+    private val getContactUseCase: GetContactUseCase,
+    private val deleteContactUseCase: DeleteContactUseCase,
+    private val updateContactUseCase: UpdateContactUseCase,
     private val appOptions: List<AppOption> = listOf(
         AppOption("WhatsApp", SupportedApps.WHATSAPP),
         AppOption("Instagram", SupportedApps.INSTAGRAM)
@@ -40,10 +36,6 @@ class ContactsViewModel(
         loadContacts()
     }
 
-    /**
-     * Central event handler - all UI interactions route through here
-     * This implements the UDF (Unidirectional Data Flow) pattern
-     */
     fun handleEvent(event: ContactsUiEvent) {
         when (event) {
             ContactsUiEvent.LoadContacts -> loadContacts()
@@ -55,17 +47,11 @@ class ContactsViewModel(
         }
     }
 
-    /**
-     * Load contacts from repository and convert to ContactEntry for UI
-     * Handles: AllowedContacts list + normalized display
-     */
     private fun loadContacts() {
         viewModelScope.launch {
             try {
-                // Get raw contact names from repository
-                val rawContacts = contactRepository.getAllContacts(_uiState.value.selectedApp)
+                val rawContacts = getContactUseCase(_uiState.value.selectedApp)
 
-                // Convert to ContactEntry for display
                 val contacts = rawContacts.map { name ->
                     val appLabel = appOptions.find {
                         it.packageName == _uiState.value.selectedApp
@@ -95,7 +81,7 @@ class ContactsViewModel(
     private fun addContact(app: String, name: String) {
         viewModelScope.launch {
             try {
-                val result = contactRepository.addContact(app, name)
+                val result = addContactUseCase(app, name)
                 when (result) {
                     AddResult.ADDED -> {
                         _uiState.value = _uiState.value.copy(
@@ -130,7 +116,7 @@ class ContactsViewModel(
     private fun deleteContact(app: String, name: String) {
         viewModelScope.launch {
             try {
-                contactRepository.deleteContact(app, name)
+                deleteContactUseCase(app, name)
                 _uiState.value = _uiState.value.copy(
                     successMessage = "Contact deleted",
                     error = null
@@ -148,7 +134,7 @@ class ContactsViewModel(
     private fun updateContact(app: String, oldName: String, newName: String) {
         viewModelScope.launch {
             try {
-                val result = contactRepository.updateContact(app, oldName, newName)
+                val result = updateContactUseCase(app, oldName, newName)
                 when (result) {
                     UpdateResult.UPDATED -> {
                         _uiState.value = _uiState.value.copy(
@@ -191,22 +177,21 @@ class ContactsViewModel(
     }
 }
 
-/**
- * App option for dropdown selection
- * (Moved from MainActivity for use in ViewModel)
- */
 data class AppOption(val label: String, val packageName: String)
 
-/**
- * Factory for creating ContactsViewModel with dependencies
- * Standard Android ViewModel factory pattern
- */
 class ContactsViewModelFactory(
-    private val contactRepository: IContactRepository
+    private val addContactUseCase: AddContactUseCase,
+    private val getContactUseCase: GetContactUseCase,
+    private val deleteContactUseCase: DeleteContactUseCase,
+    private val updateContactUseCase: UpdateContactUseCase
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         @Suppress("UNCHECKED_CAST")
-        return ContactsViewModel(contactRepository) as T
+        return ContactsViewModel(
+            addContactUseCase,
+            getContactUseCase,
+            deleteContactUseCase,
+            updateContactUseCase
+        ) as T
     }
 }
-

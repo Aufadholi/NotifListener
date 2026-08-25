@@ -1,60 +1,23 @@
 package com.example.wanotification.uiux
 
-import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
-import android.text.TextUtils
 import android.widget.Toast
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -69,33 +32,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wanotification.config.SupportedApps
 import com.example.wanotification.di.DefaultAppContainer
-import com.example.wanotification.filter.ContactStore
-import com.example.wanotification.listener.NotificationListener
 import com.example.wanotification.state.ContactEntry
 import com.example.wanotification.state.ContactsUiEvent
 import com.example.wanotification.state.HomeUiEvent
 import com.example.wanotification.state.HomeUiState
-import com.example.wanotification.ui.theme.SpaceBackgroundDeep
-import com.example.wanotification.ui.theme.SpaceBackgroundMid
-import com.example.wanotification.ui.theme.SpaceCardAppSelector
-import com.example.wanotification.ui.theme.SpaceCardContactItem
-import com.example.wanotification.ui.theme.SpaceCardEmpty
-import com.example.wanotification.ui.theme.SpaceCardNotification
-import com.example.wanotification.ui.theme.SpaceCyan
-import com.example.wanotification.ui.theme.SpaceGreen
-import com.example.wanotification.ui.theme.SpaceIndigo
-import com.example.wanotification.ui.theme.SpaceMuted
-import com.example.wanotification.ui.theme.SpaceNavy
-import com.example.wanotification.ui.theme.SpacePurple
-import com.example.wanotification.ui.theme.SpaceRed
-import com.example.wanotification.ui.theme.SpaceText
-import com.example.wanotification.ui.theme.WaNotificationTheme
-import com.example.wanotification.viewmodel.AppOption
-import com.example.wanotification.viewmodel.ContactsViewModel
-import com.example.wanotification.viewmodel.ContactsViewModelFactory
-import com.example.wanotification.viewmodel.HomeViewModel
-import com.example.wanotification.viewmodel.HomeViewModelFactory
-import com.example.wanotification.viewmodel.HomeSideEffect
+import com.example.wanotification.ui.theme.*
+import com.example.wanotification.viewmodel.*
 
 /**
  * FilterOption for contact filter dropdown
@@ -107,10 +49,6 @@ data class FilterOption(
 
 /**
  * MainActivity - Entry point with MVVM architecture
- *
- * ✅ PRESERVED: All original UI functionality
- * ✅ ADDED: MVVM layer for state management
- * ✅ SAFE: No business logic changes to services/managers
  */
 class MainActivity : ComponentActivity() {
 
@@ -134,10 +72,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainScreenContainer(appContainer: com.example.wanotification.di.AppContainer) {
     val homeViewModel: HomeViewModel = viewModel(
-        factory = HomeViewModelFactory(appContainer.settingsRepository)
+        factory = HomeViewModelFactory(
+            appContainer.checkNotificationAccessUseCase,
+            appContainer.enableTTUseCase,
+            appContainer.getTtsSettingsUseCase
+        )
     )
     val contactsViewModel: ContactsViewModel = viewModel(
-        factory = ContactsViewModelFactory(appContainer.contactRepository)
+        factory = ContactsViewModelFactory(
+            appContainer.addContactUseCase,
+            appContainer.getContactUseCase,
+            appContainer.deleteContactUseCase,
+            appContainer.updateContactUseCase
+        )
     )
 
     MainScreen(homeViewModel, contactsViewModel)
@@ -145,11 +92,6 @@ private fun MainScreenContainer(appContainer: com.example.wanotification.di.AppC
 
 /**
  * Main screen with tabs (Home + Contacts)
- *
- * UDF Pattern:
- * - Observes state from ViewModels
- * - Sends events to ViewModels
- * - No local mutable state except UI transients (input, dialog)
  */
 @Composable
 private fun MainScreen(
@@ -159,11 +101,9 @@ private fun MainScreen(
     val ctx = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Observe state from ViewModels
     val homeUiState by homeViewModel.uiState.collectAsState()
     val contactsUiState by contactsViewModel.uiState.collectAsState()
 
-    // UI-only transient state (input fields, dialogs)
     val selectedTab = rememberSaveable { mutableStateOf(0) }
     val addAppIndex = rememberSaveable { mutableStateOf(0) }
     val filterIndex = rememberSaveable { mutableStateOf(0) }
@@ -182,7 +122,6 @@ private fun MainScreen(
         FilterOption("Instagram", SupportedApps.INSTAGRAM)
     )
 
-    // Handle side effects (one-time events from ViewModel)
     LaunchedEffect(Unit) {
         homeViewModel.sideEffects.collect { sideEffect ->
             when (sideEffect) {
@@ -193,12 +132,10 @@ private fun MainScreen(
         }
     }
 
-    // Refresh contacts when they change
     LaunchedEffect(contactsUiState.selectedApp) {
         contactsViewModel.handleEvent(ContactsUiEvent.LoadContacts)
     }
 
-    // Refresh notification access status when resumed
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -218,17 +155,13 @@ private fun MainScreen(
         )
     )
 
-    // Filter contacts for display
     val displayedContacts = buildList {
         val selectedFilter = filterOptions[filterIndex.value]
         if (selectedFilter.appPackage == null) {
-            // Show all contacts from all apps
             addAll(contactsUiState.contacts.asReversed())
         } else if (selectedFilter.appPackage == SupportedApps.WHATSAPP) {
-            // Show only WhatsApp
             addAll(contactsUiState.contacts.filter { it.appPackage == SupportedApps.WHATSAPP }.asReversed())
         } else {
-            // Show only Instagram
             addAll(contactsUiState.contacts.filter { it.appPackage == SupportedApps.INSTAGRAM }.asReversed())
         }
     }
@@ -275,7 +208,6 @@ private fun MainScreen(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 if (selectedTab.value == 0) {
-                    // Home Screen
                     when (homeUiState) {
                         is HomeUiState.Loading -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -302,7 +234,6 @@ private fun MainScreen(
                         }
                     }
                 } else {
-                    // Contacts Screen
                     ContactsScreen(
                         appOptions = appOptions,
                         addAppIndex = addAppIndex.value,
@@ -337,7 +268,6 @@ private fun MainScreen(
         }
     }
 
-    // Edit dialog
     if (editingEntry.value != null) {
         val entry = editingEntry.value!!
         AlertDialog(
@@ -695,49 +625,3 @@ private fun ContactRow(
         }
     }
 }
-
-/**
- * REPOSITORY LAYER - Consolidated into MainActivity
- */
-interface IContactRepository {
-    suspend fun getAllContacts(app: String): List<String>
-    suspend fun addContact(app: String, name: String): AddResult
-    suspend fun deleteContact(app: String, name: String)
-    suspend fun updateContact(app: String, oldName: String, newName: String): UpdateResult
-}
-
-class ContactRepository(private val context: android.content.Context) : IContactRepository {
-    override suspend fun getAllContacts(app: String): List<String> =
-        withContext(Dispatchers.IO) {
-            ContactStore.getAllowedContacts(context, app)
-        }
-
-    override suspend fun addContact(app: String, name: String): AddResult =
-        withContext(Dispatchers.IO) {
-            when (ContactStore.addContact(context, app, name)) {
-                ContactStore.AddResult.ADDED -> AddResult.ADDED
-                ContactStore.AddResult.DUPLICATE -> AddResult.DUPLICATE
-                ContactStore.AddResult.LIMIT -> AddResult.LIMIT
-                ContactStore.AddResult.INVALID -> AddResult.INVALID
-            }
-        }
-
-    override suspend fun deleteContact(app: String, name: String) {
-        withContext(Dispatchers.IO) {
-            ContactStore.removeContact(context, app, name)
-        }
-    }
-
-    override suspend fun updateContact(app: String, oldName: String, newName: String): UpdateResult =
-        withContext(Dispatchers.IO) {
-            when (ContactStore.updateContact(context, app, oldName, newName)) {
-                ContactStore.UpdateResult.UPDATED -> UpdateResult.UPDATED
-                ContactStore.UpdateResult.DUPLICATE -> UpdateResult.DUPLICATE
-                ContactStore.UpdateResult.INVALID -> UpdateResult.INVALID
-                ContactStore.UpdateResult.NOT_FOUND -> UpdateResult.NOT_FOUND
-            }
-        }
-}
-
-enum class AddResult { ADDED, DUPLICATE, LIMIT, INVALID }
-enum class UpdateResult { UPDATED, DUPLICATE, INVALID, NOT_FOUND }
