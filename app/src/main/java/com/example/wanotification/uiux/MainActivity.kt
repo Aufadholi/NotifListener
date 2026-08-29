@@ -347,7 +347,8 @@ private fun HomeScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.fillMaxWidth(0.72f)) {
                 Text(
@@ -394,37 +395,45 @@ private fun ContactsScreen(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Pilih Sosmed",
-                style = MaterialTheme.typography.labelLarge,
-                color = AppTextDark,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            SosmedDropdown(
-                currentLabel = appOptions[addAppIndex].label,
-                options = appOptions.map { it.label },
-                onSelectIndex = onAddAppChange
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Pilih Sosmed",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = AppTextDark,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SosmedDropdown(
+                        currentLabel = appOptions[addAppIndex].label,
+                        options = appOptions.map { it.label },
+                        onSelectIndex = onAddAppChange
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 OutlinedTextField(
                     value = inputText,
                     onValueChange = onInputChange,
                     label = { Text("Nama kontak") },
                     modifier = Modifier.fillMaxWidth(0.65f)
                 )
+            }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Spacer(modifier = Modifier.size(10.dp))
 
                 Button(
                     onClick = onAddContact,
-                    modifier = Modifier.width(96.dp).height(40.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTextDark)
                 ) {
                     Text("Tambah")
