@@ -19,7 +19,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -38,6 +37,8 @@ import com.example.wanotification.state.HomeUiEvent
 import com.example.wanotification.state.HomeUiState
 import com.example.wanotification.ui.theme.*
 import com.example.wanotification.viewmodel.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 
 data class FilterOption(
     val label: String,
@@ -134,14 +135,7 @@ private fun MainScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val spaceBackground = Brush.verticalGradient(
-        colors = listOf(
-            SpaceNavy,
-            SpaceIndigo,
-            SpaceBackgroundMid,
-            SpaceBackgroundDeep
-        )
-    )
+    // No-op for unused backgroundBrush
 
     val displayedContacts = buildList {
         val selectedFilter = filterOptions[filterIndex.value]
@@ -157,23 +151,23 @@ private fun MainScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(spaceBackground)
+            .background(AppBackground)
     ) {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = SpaceCardNotification.copy(alpha = 0.9f)) {
+                NavigationBar(containerColor = Color.White.copy(alpha = 0.9f)) {
                     NavigationBarItem(
                         selected = selectedTab.value == 0,
                         onClick = { selectedTab.value = 0 },
-                        icon = { Text("H", color = SpaceText) },
-                        label = { Text("Home") }
+                        icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+
                     )
                     NavigationBarItem(
                         selected = selectedTab.value == 1,
                         onClick = { selectedTab.value = 1 },
-                        icon = { Text("C", color = SpaceText) },
-                        label = { Text("Contacts") }
+                        icon = { Icon(Icons.Filled.Contacts, contentDescription = "Contacts") },
+
                     )
                 }
             }
@@ -186,12 +180,13 @@ private fun MainScreen(
                     .padding(top = 20.dp, bottom = 16.dp)
             ) {
                 Text(
-                    text = "WaNotification",
+                    text = "Notification Listener",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 30.sp
                     ),
-                    color = SpaceText
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    color = AppTextDark
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -199,7 +194,7 @@ private fun MainScreen(
                     when (homeUiState) {
                         is HomeUiState.Loading -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Loading...", color = SpaceText)
+                                Text("Loading...", color = AppTextDark)
                             }
                         }
                         is HomeUiState.Success -> {
@@ -266,7 +261,7 @@ private fun MainScreen(
                     Text(
                         text = "Sosmed: ${entry.appLabel}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SpaceMuted
+                        color = AppTextDark.copy(alpha = 0.6f)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
@@ -317,9 +312,9 @@ private fun HomeScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "NotificationListener",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
-            color = SpaceText
+            text = "Gunakan untuk kontak spesial anda",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
+            color = AppTextDark
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -340,12 +335,7 @@ private fun HomeScreen(
                     Text(
                         text = statusLabel,
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = SpaceText
-                    )
-                    Text(
-                        text = "Notifikasi",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = SpaceText.copy(alpha = 0.9f)
+                        color = Color.White
                     )
                 }
             }
@@ -361,14 +351,14 @@ private fun HomeScreen(
                 Text(
                     text = "Aktifkan TTS",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = SpaceText,
+                    color = AppTextDark,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "TTS hanya bisa diubah saat notifikasi aktif.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SpaceMuted
+                    color = AppTextDark.copy(alpha = 0.6f)
                 )
             }
             Switch(
@@ -398,14 +388,14 @@ private fun ContactsScreen(
     Spacer(modifier = Modifier.height(14.dp))
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = SpaceCardAppSelector.copy(alpha = 0.95f)),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "Pilih Sosmed",
                 style = MaterialTheme.typography.labelLarge,
-                color = SpaceCyan,
+                color = AppTextDark,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -443,14 +433,14 @@ private fun ContactsScreen(
     Spacer(modifier = Modifier.height(14.dp))
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = SpaceCardNotification.copy(alpha = 0.95f)),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "Filter Kontak",
                 style = MaterialTheme.typography.labelLarge,
-                color = SpaceCyan,
+                color = AppTextDark,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -470,13 +460,13 @@ private fun ContactsScreen(
 
     if (contacts.isEmpty()) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = SpaceCardEmpty.copy(alpha = 0.85f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.5f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "Belum ada kontak yang diizinkan",
                 modifier = Modifier.padding(16.dp),
-                color = SpaceMuted
+                color = AppTextDark.copy(alpha = 0.6f)
             )
         }
     } else {
@@ -539,22 +529,22 @@ private fun ContactListHeader() {
     ) {
         Text(
             text = "No",
-            color = SpaceMuted,
+            color = AppTextDark.copy(alpha = 0.5f),
             modifier = Modifier.width(32.dp)
         )
         Text(
             text = "Nama",
-            color = SpaceMuted,
+            color = AppTextDark.copy(alpha = 0.5f),
             modifier = Modifier.width(160.dp)
         )
         Text(
             text = "Sosmed",
-            color = SpaceMuted,
+            color = AppTextDark.copy(alpha = 0.5f),
             modifier = Modifier.width(96.dp)
         )
         Text(
             text = "Aksi",
-            color = SpaceMuted,
+            color = AppTextDark.copy(alpha = 0.5f),
             modifier = Modifier.width(120.dp)
         )
     }
@@ -568,11 +558,11 @@ private fun ContactRow(
     onEdit: () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = SpaceCardContactItem.copy(alpha = 0.96f)),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f)),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(width = 1.dp, color = SpacePurple.copy(alpha = 0.18f), shape = MaterialTheme.shapes.medium)
+            .border(width = 1.dp, color = Color.Gray.copy(alpha = 0.2f), shape = MaterialTheme.shapes.medium)
     ) {
         Row(
             modifier = Modifier.padding(12.dp).fillMaxWidth(),
@@ -580,17 +570,17 @@ private fun ContactRow(
         ) {
             Text(
                 text = index.toString(),
-                color = SpaceText,
+                color = AppTextDark,
                 modifier = Modifier.width(32.dp)
             )
             Text(
                 text = entry.name,
-                color = SpaceText,
+                color = AppTextDark,
                 modifier = Modifier.width(160.dp)
             )
             Text(
                 text = entry.appLabel,
-                color = SpaceText,
+                color = AppTextDark,
                 modifier = Modifier.width(96.dp)
             )
             Row(

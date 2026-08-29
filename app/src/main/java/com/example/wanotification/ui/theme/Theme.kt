@@ -15,26 +15,26 @@ private val DarkColorScheme = darkColorScheme(
     primary = SpacePurple,
     secondary = SpaceCyan,
     tertiary = SpaceRose,
-    background = SpaceNavy,
+    background = AppBackground,
     surface = SpaceIndigo,
     onPrimary = SpaceText,
     onSecondary = SpaceNavy,
     onTertiary = SpaceNavy,
-    onBackground = SpaceText,
-    onSurface = SpaceText
+    onBackground = AppTextDark,
+    onSurface = AppTextDark
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = SpacePurple,
     secondary = SpaceCyan,
     tertiary = SpaceRose,
-    background = SpaceLightBase,
+    background = AppBackground,
     surface = SpaceLightSurface,
     onPrimary = SpaceText,
     onSecondary = SpaceNavy,
     onTertiary = SpaceNavy,
-    onBackground = SpaceNavy,
-    onSurface = SpaceNavy
+    onBackground = AppTextDark,
+    onSurface = AppTextDark
 )
 
 @Composable
