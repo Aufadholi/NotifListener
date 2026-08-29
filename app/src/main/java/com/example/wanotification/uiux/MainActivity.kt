@@ -39,17 +39,11 @@ import com.example.wanotification.state.HomeUiState
 import com.example.wanotification.ui.theme.*
 import com.example.wanotification.viewmodel.*
 
-/**
- * FilterOption for contact filter dropdown
- */
 data class FilterOption(
     val label: String,
     val appPackage: String?
 )
 
-/**
- * MainActivity - Entry point with MVVM architecture
- */
 class MainActivity : ComponentActivity() {
 
     private lateinit var appContainer: DefaultAppContainer
@@ -66,9 +60,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Container that sets up ViewModels with DI
- */
 @Composable
 private fun MainScreenContainer(appContainer: com.example.wanotification.di.AppContainer) {
     val homeViewModel: HomeViewModel = viewModel(
@@ -90,9 +81,6 @@ private fun MainScreenContainer(appContainer: com.example.wanotification.di.AppC
     MainScreen(homeViewModel, contactsViewModel)
 }
 
-/**
- * Main screen with tabs (Home + Contacts)
- */
 @Composable
 private fun MainScreen(
     homeViewModel: HomeViewModel,
