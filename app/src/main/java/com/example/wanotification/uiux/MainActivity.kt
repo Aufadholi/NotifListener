@@ -6,6 +6,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,7 @@ import com.example.wanotification.state.HomeUiState
 import com.example.wanotification.ui.theme.*
 import com.example.wanotification.viewmodel.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 
 data class FilterOption(
@@ -395,49 +399,46 @@ private fun ContactsScreen(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
+            Text(
+                text = "Tambah Kontak",
+                style = MaterialTheme.typography.labelLarge,
+                color = AppTextDark,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SosmedDropdown(
+                currentLabel = appOptions[addAppIndex].label,
+                options = appOptions.map { it.label },
+                onSelectIndex = onAddAppChange
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = onInputChange,
+                placeholder = { Text("Nama kontak", color = AppTextDark.copy(alpha = 0.4f)) },
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Pilih Sosmed",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = AppTextDark,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SosmedDropdown(
-                        currentLabel = appOptions[addAppIndex].label,
-                        options = appOptions.map { it.label },
-                        onSelectIndex = onAddAppChange
-                    )
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppTextDark.copy(alpha = 0.3f),
+                    unfocusedBorderColor = AppTextDark.copy(alpha = 0.15f),
+                    focusedTextColor = AppTextDark,
+                    unfocusedTextColor = AppTextDark
+                ),
+                shape = MaterialTheme.shapes.medium,
+                singleLine = true
+            )
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = onInputChange,
-                    label = { Text("Nama kontak") },
-                    modifier = Modifier.fillMaxWidth(0.65f)
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
+            Button(
+                onClick = onAddContact,
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                colors = ButtonDefaults.buttonColors(containerColor = AppTextDark),
+                shape = MaterialTheme.shapes.medium
             ) {
-                Spacer(modifier = Modifier.size(10.dp))
-
-                Button(
-                    onClick = onAddContact,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTextDark)
-                ) {
-                    Text("Tambah")
-                }
+                Text("Tambah")
             }
         }
     }
@@ -455,7 +456,7 @@ private fun ContactsScreen(
                 color = AppTextDark,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             SosmedDropdown(
                 currentLabel = filterOptions[filterIndex].label,
                 options = filterOptions.map { it.label },
@@ -506,20 +507,58 @@ private fun SosmedDropdown(
     onSelectIndex: (Int) -> Unit
 ) {
     val expanded = rememberSaveable { mutableStateOf(false) }
+    var buttonWidth by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
 
-    Box {
-        OutlinedButton(onClick = { expanded.value = true }) {
-            Text(currentLabel)
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { expanded.value = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { buttonWidth = it.width },
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = AppTextDark
+            ),
+            border = BorderStroke(1.dp, AppTextDark.copy(alpha = 0.15f)),
+            shape = MaterialTheme.shapes.medium,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = currentLabel,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = AppTextDark
+                )
+                Icon(
+                    imageVector = if (expanded.value) Icons.Filled.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = if (expanded.value) "Tutup" else "Buka",
+                    tint = AppTextDark.copy(alpha = 0.5f),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
 
         DropdownMenu(
             expanded = expanded.value,
             onDismissRequest = { expanded.value = false },
+            modifier = Modifier
+                .width(with(density) { buttonWidth.toDp() })
+                .background(Color.White),
             properties = PopupProperties(focusable = true)
         ) {
             options.forEachIndexed { index, label ->
                 DropdownMenuItem(
-                    text = { Text(label, color = MaterialTheme.colorScheme.onSurface) },
+                    text = {
+                        Text(
+                            text = label,
+                            color = AppTextDark,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
                     onClick = {
                         onSelectIndex(index)
                         expanded.value = false
