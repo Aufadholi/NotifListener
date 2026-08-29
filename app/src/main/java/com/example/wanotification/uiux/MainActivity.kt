@@ -322,10 +322,12 @@ private fun HomeScreen(
         Button(
             onClick = onOpenNotificationSettings,
             modifier = Modifier
-                .size(190.dp)
-                .clip(CircleShape)
-                .background(statusColor)
-                .clickable { onOpenNotificationSettings() }
+                .size(190.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = statusColor,
+                contentColor = Color.White
+            )
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -422,7 +424,8 @@ private fun ContactsScreen(
 
                 Button(
                     onClick = onAddContact,
-                    modifier = Modifier.width(96.dp).height(40.dp)
+                    modifier = Modifier.width(96.dp).height(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTextDark)
                 ) {
                     Text("Tambah")
                 }
@@ -562,7 +565,7 @@ private fun ContactRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(width = 1.dp, color = Color.Gray.copy(alpha = 0.2f), shape = MaterialTheme.shapes.medium)
+            .border(width = 1.dp, color = AppTextDark.copy(alpha = 0.1f), shape = MaterialTheme.shapes.medium)
     ) {
         Row(
             modifier = Modifier.padding(12.dp).fillMaxWidth(),
@@ -595,7 +598,8 @@ private fun ContactRow(
                 }
                 Button(
                     onClick = onRemove,
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.height(32.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SpaceRed)
                 ) {
                     Text("Hapus")
                 }
